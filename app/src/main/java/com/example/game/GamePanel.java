@@ -11,6 +11,8 @@ import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
 
+import com.example.game.entities.GameCharacters;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -18,15 +20,20 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     private Paint paint = new Paint();
     private SurfaceHolder holder;
-    private ArrayList<RndSquare> squares = new ArrayList<>();
+    private float x, y;
     private Random rand = new Random();
     private GameLoop gameLoop;
+    private ArrayList<PointF> skeletons = new ArrayList<>();
 
     public GamePanel(Context context) {
         super(context);
         holder = getHolder();
         holder.addCallback(this);
         paint.setColor(Color.BLUE);
+
+        for (int i = 0; i < 50; i++) {
+            skeletons.add(new PointF(rand.nextInt(1080), rand.nextInt(1920)));
+        }
 
         gameLoop = new GameLoop(this);
     }
@@ -35,18 +42,22 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         Canvas c = holder.lockCanvas();
         c.drawColor(Color.BLACK);
 
-        synchronized (squares) {
-            for (RndSquare square : squares)
-                square.draw(c);
-        }
+        c.drawBitmap(GameCharacters.PLAYER.getSpriteSheet(), 500, 500, null);
 
+        c.drawBitmap(GameCharacters.PLAYER.getSprite(0, 0), x, y, null);
+
+        for (PointF skeleton : skeletons) {
+            c.drawBitmap(GameCharacters.SKELETON.getSprite(0, 0), skeleton.x, skeleton.y, null);
+        }
         holder.unlockCanvasAndPost(c);
     }
 
     public void update(double delta) {
-        synchronized (squares) {
-            for (RndSquare square : squares) {
-                square.move(delta);
+        for (PointF skeleton : skeletons) {
+            skeleton.y += 300 * delta; // Move skeletons down at a speed of 300 pixels per second
+            if (skeleton.y > getHeight()) {
+                skeleton.y = 0; // Reset position if it goes off screen
+                skeleton.x = rand.nextInt(getWidth()); // Randomize x position
             }
         }
     }
@@ -54,13 +65,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            PointF pos = new PointF(event.getX(), event.getY());
-            int color = Color.rgb(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
-            int size = 25 + rand.nextInt(100);
-
-            synchronized (squares) {
-                squares.add(new RndSquare(pos, color, size));
-            }
+            x = event.getX();
+            y = event.getY();
         }
 
         return true;
@@ -79,35 +85,5 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
 
-    }
-
-    private class RndSquare {
-        private PointF pos;
-        private int size;
-        private Paint paint;
-        private int xDir = 1, yDir = 1;
-
-        public RndSquare(PointF pos, int color, int size) {
-            this.pos = pos;
-            this.size = size;
-            paint = new Paint();
-            paint.setColor(color);
-        }
-
-        public void move(double delta) {
-            pos.x += xDir * delta * 300; // *300 frames per second
-            if (pos.x < 0 || pos.x + size > getWidth()) {
-                xDir *= -1; // Reverse direction on X-axis
-            }
-
-            pos.y += yDir * delta * 300; // *300 frames per second
-            if (pos.y < 0 || pos.y + size > getHeight()) {
-                yDir *= -1; // Reverse direction on Y-axis
-            }
-        }
-
-        public void draw(Canvas c) {
-            c.drawRect(pos.x, pos.y, pos.x + size, pos.y + size, paint);
-        }
     }
 }
