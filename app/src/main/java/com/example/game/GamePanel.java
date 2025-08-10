@@ -1,5 +1,8 @@
 package com.example.game;
 
+import static com.example.game.MainActivity.GAME_HEIGHT;
+import static com.example.game.MainActivity.GAME_WIDTH;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -44,7 +47,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         gameLoop = new GameLoop(this);
 
 
-        skeletonPos = new PointF(rand.nextInt(1080), rand.nextInt(1920));
+        skeletonPos = new PointF(rand.nextInt(GAME_WIDTH), rand.nextInt(GAME_HEIGHT));
 
 //        for (int i = 0; i < 50; i++) {
 //            skeletons.add(new PointF(rand.nextInt(1080), rand.nextInt(1920)));
@@ -78,7 +81,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         switch (skeletonDir) {
             case GameConstants.FaceDir.DOWN:
                 skeletonPos.y += delta * 300;
-                if (skeletonPos.y >= getHeight()) {
+                if (skeletonPos.y >= GAME_HEIGHT) {
                     skeletonDir = GameConstants.FaceDir.UP;
                 }
                 break;
@@ -92,7 +95,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             case GameConstants.FaceDir.RIGHT:
                 skeletonPos.x += delta * 300;
-                if (skeletonPos.x >= getWidth()) {
+                if (skeletonPos.x >= GAME_WIDTH) {
                     skeletonDir = GameConstants.FaceDir.LEFT;
                 }
                 break;
