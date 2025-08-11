@@ -1,18 +1,20 @@
 package com.example.game.entities;
 
+import static com.example.game.helpers.GameConstants.Sprite.DEFAULT_SIZE;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import com.example.game.MainActivity;
 import com.example.game.R;
+import com.example.game.helpers.interfaces.BitmapMethods;
 
-public enum GameCharacters {
+public enum GameCharacters implements BitmapMethods {
     PLAYER(R.drawable.player_spritesheet),
     SKELETON(R.drawable.skeleton_spritesheet);
 
-    private Bitmap spriteSheet;
-    private Bitmap[][] sprites = new Bitmap[7][4];
-    private BitmapFactory.Options options = new BitmapFactory.Options();
+    private final Bitmap spriteSheet;
+    private final Bitmap[][] sprites = new Bitmap[7][4];
 
 
     GameCharacters(int resID) {
@@ -20,11 +22,12 @@ public enum GameCharacters {
         spriteSheet = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resID, options);
         for (int j = 0; j < sprites.length; j++) {
             for (int i = 0; i < sprites[j].length; i++) {
-                sprites[j][i] = getScaledBitmap(Bitmap.createBitmap(spriteSheet, 16 * i, 16 * j, 16, 16));
+                sprites[j][i] = getScaledBitmap(Bitmap.createBitmap(spriteSheet, DEFAULT_SIZE * i, DEFAULT_SIZE * j, DEFAULT_SIZE, DEFAULT_SIZE));
             }
         }
     }
 
+    @SuppressWarnings("unused")
     public Bitmap getSpriteSheet() {
         return spriteSheet;
     }
@@ -36,7 +39,5 @@ public enum GameCharacters {
         return sprites[row][col];
     }
 
-    private Bitmap getScaledBitmap(Bitmap bitmap) {
-        return Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() * 6, bitmap.getHeight() * 6, false);
-    }
+
 }
