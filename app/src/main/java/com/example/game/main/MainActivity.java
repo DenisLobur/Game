@@ -1,4 +1,4 @@
-package com.example.game;
+package com.example.game.main;
 
 import android.content.Context;
 import android.os.Build;

@@ -5,7 +5,7 @@ import static com.example.game.helpers.GameConstants.Sprite.DEFAULT_SIZE;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import com.example.game.MainActivity;
+import com.example.game.main.MainActivity;
 import com.example.game.R;
 import com.example.game.helpers.interfaces.BitmapMethods;
 

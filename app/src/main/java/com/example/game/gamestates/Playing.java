@@ -1,50 +1,45 @@
-package com.example.game;
+package com.example.game.gamestates;
 
 import static com.example.game.helpers.GameConstants.Sprite.SIZE;
 
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-
-import androidx.annotation.NonNull;
 
 import com.example.game.entities.Character;
 import com.example.game.entities.Player;
 import com.example.game.entities.enemies.Skeleton;
 import com.example.game.environments.MapManager;
 import com.example.game.helpers.GameConstants;
-import com.example.game.inputs.TouchEvents;
+import com.example.game.helpers.interfaces.GameStateInterface;
+import com.example.game.main.Game;
 
 import java.util.ArrayList;
-import java.util.Random;
 
-public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
-
-    private final Paint paint = new Paint();
-    private final SurfaceHolder holder;
+public class Playing extends BaseState implements GameStateInterface {
     private float cameraX, cameraY;
     private boolean movePlayer;
     private PointF lastTouchDiff;
-    private final Random rand = new Random();
-    private final GameLoop gameLoop;
-    private final TouchEvents touchEvents;
     private final MapManager mapManager;
-
     private Player player;
     private ArrayList<Skeleton> skeletons;
 
-    public GamePanel(Context context) {
-        super(context);
-        holder = getHolder();
-        holder.addCallback(this);
-        paint.setColor(Color.BLUE);
-        touchEvents = new TouchEvents(this);
-        gameLoop = new GameLoop(this);
+    // For UI
+    private float xCenter = 250, yCenter = 800, radius = 150;
+    private Paint circlePaint;
+    private float xTouch, yTouch;
+    private boolean touchDown;
+
+    public Playing(Game game) {
+        super(game);
+
+        circlePaint = new Paint();
+        circlePaint.setColor(Color.RED);
+        circlePaint.setStrokeWidth(5);
+        circlePaint.setStyle(Paint.Style.STROKE);
+
         mapManager = new MapManager();
 
         player = new Player();
@@ -54,18 +49,73 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    public void render() {
-        Canvas c = holder.lockCanvas();
-        c.drawColor(Color.BLACK);
+    @Override
+    public void update(double delta) {
+        updatePlayerMove(delta);
+        player.update(delta, movePlayer);
+        for (Skeleton skeleton : skeletons) {
+            skeleton.update(delta);
+        }
+        mapManager.setCameraValues(cameraX, cameraY);
+    }
+
+    @Override
+    public void render(Canvas c) {
         mapManager.draw(c);
-        touchEvents.draw(c);
+        drawUI(c);
 
         drawPlayer(c);
         for (Skeleton skeleton : skeletons) {
             drawCharacter(c, skeleton);
         }
+    }
 
-        holder.unlockCanvasAndPost(c);
+    private void drawUI(Canvas c) {
+        c.drawCircle(xCenter, yCenter, radius, circlePaint);
+    }
+
+    @Override
+    public void touchEvents(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN: {
+                float x = event.getX();
+                float y = event.getY();
+
+                float a = Math.abs(x - xCenter);
+                float b = Math.abs(y - yCenter);
+                float c = (float) Math.hypot(a, b);
+
+                if (c <= radius) {
+                    touchDown = true;
+                    xTouch = x;
+                    yTouch = y;
+                } else {
+                    game.setGameState(Game.GameState.MENU);
+                }
+
+                break;
+            }
+            case MotionEvent.ACTION_MOVE: {
+                if (touchDown) {
+                    xTouch = event.getX();
+                    yTouch = event.getY();
+
+                    float xDiff = xTouch - xCenter;
+                    float yDiff = yTouch - yCenter;
+                    setPlayerMoveTrue(new PointF(xDiff, yDiff));
+
+                }
+
+                break;
+            }
+            case MotionEvent.ACTION_UP: {
+                touchDown = false;
+                setPlayerMoveFalse();
+
+                break;
+            }
+
+        }
     }
 
     private void drawPlayer(Canvas c) {
@@ -84,15 +134,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 c.getHitbox().top + cameraY,
                 null
         );
-    }
-
-    public void update(double delta) {
-        updatePlayerMove(delta);
-        player.update(delta, movePlayer);
-        for (Skeleton skeleton : skeletons) {
-            skeleton.update(delta);
-        }
-        mapManager.setCameraValues(cameraX, cameraY);
     }
 
     private void updatePlayerMove(double delta) {
@@ -145,27 +186,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             cameraX += deltaX;
             cameraY += deltaY;
         }
-    }
-
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        return touchEvents.touchEvent(event);
-    }
-
-    @Override
-    public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        gameLoop.startGameLoop();
-    }
-
-    @Override
-    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-
-    }
-
-    @Override
-    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-
     }
 
     public void setPlayerMoveTrue(PointF lastTouchDiff) {
